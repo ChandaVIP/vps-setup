@@ -1,28 +1,21 @@
 #!/usr/bin/env python3
-import socket, threading, ssl
+import socket, threading
 
 LISTEN_PORT = 80
 SSH_ADDR = '127.0.0.1'
 SSH_PORT = 22
 
-CERT_FILE = '/etc/letsencrypt/live/chanda-vpn.duckdns.org/fullchain.pem'
-KEY_FILE = '/etc/letsencrypt/live/chanda-vpn.duckdns.org/privkey.pem'
-
 def handle_client(client_socket):
     try:
-        context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
-        context.load_cert_chain(certfile=CERT_FILE, keyfile=KEY_FILE)
-        secure_socket = context.wrap_socket(client_socket, server_side=True)
-
-        request = secure_socket.recv(4096)
+        request = client_socket.recv(4096)
         if not request:
-            secure_socket.close()
+            client_socket.close()
             return
 
         ssh_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         ssh_socket.connect((SSH_ADDR, SSH_PORT))
 
-        secure_socket.sendall(b"HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\n\r\n")
+        client_socket.sendall(b"HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\n\r\n")
 
         def forward(src, dst):
             try:
@@ -38,11 +31,10 @@ def handle_client(client_socket):
                 try: dst.close()
                 except: pass
 
-        threading.Thread(target=forward, args=(secure_socket, ssh_socket)).start()
-        threading.Thread(target=forward, args=(ssh_socket, secure_socket)).start()
+        threading.Thread(target=forward, args=(client_socket, ssh_socket)).start()
+        threading.Thread(target=forward, args=(ssh_socket, client_socket)).start()
     except:
-        try: client_socket.close()
-        except: pass
+        client_socket.close()
 
 def main():
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
