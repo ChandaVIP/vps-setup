@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import socket, threading, select
 
-LISTEN_PORT = 8080
+LISTEN_PORT = 8888
 SSH_ADDR = '127.0.0.1'
 SSH_PORT = 22
 
@@ -55,7 +55,8 @@ def main():
     server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     server.bind(('0.0.0.0', LISTEN_PORT))
     server.listen(200)
-    
+    print(f"ws-proxy listening on 0.0.0.0:{LISTEN_PORT} -> forwarding to {SSH_ADDR}:{SSH_PORT}")
+
     while True:
         client_sock, _ = server.accept()
         threading.Thread(target=handle_client, args=(client_sock,), daemon=True).start()
