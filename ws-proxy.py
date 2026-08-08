@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import socket, threading
 
-LISTEN_PORT = 80
+LISTEN_PORT = 8080
 SSH_ADDR = '127.0.0.1'
 SSH_PORT = 22
 
