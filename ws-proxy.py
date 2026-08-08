@@ -12,6 +12,11 @@ def handle_client(client_socket):
             client_socket.close()
             return
 
+        # បង្ហាញសំណើដែលផ្ញើមកពីទូរស័ព្ទក្នុង Terminal
+        print("--- REQ RECEIVED ---")
+        print(request.decode('utf-8', errors='ignore'))
+        print("--------------------")
+
         ssh_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         ssh_socket.connect((SSH_ADDR, SSH_PORT))
 
@@ -33,7 +38,8 @@ def handle_client(client_socket):
 
         threading.Thread(target=forward, args=(client_socket, ssh_socket)).start()
         threading.Thread(target=forward, args=(ssh_socket, client_socket)).start()
-    except:
+    except Exception as e:
+        print(f"Error: {e}")
         client_socket.close()
 
 def main():
@@ -41,6 +47,7 @@ def main():
     server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     server.bind(('0.0.0.0', LISTEN_PORT))
     server.listen(100)
+    print(f"Proxy started on port {LISTEN_PORT}...")
     
     while True:
         client_sock, _ = server.accept()
